@@ -1,8 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import apiClient from '../../api/client';
-import { useAuthStore } from '../../context/authStore';
-import { BotIcon, SendIcon, SparklesIcon, UserIcon } from '../../assets/icons';
+import { api as apiClient } from '../../services/api';
+import { useAuthStore } from '../../store/authStore';
+import { IconSparkles as SparklesIcon, IconSend as SendIcon, IconUser as UserIcon } from '../../components/icons/Icons';
 import { formatDistanceToNow } from 'date-fns';
+
+// Bot icon inline since it's not in the icons file
+const BotIcon = ({ size = 20, className }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="3" y="11" width="18" height="10" rx="2"/>
+    <circle cx="12" cy="5" r="2"/>
+    <path d="M12 7v4"/>
+    <line x1="8" y1="16" x2="8" y2="16"/>
+    <line x1="16" y1="16" x2="16" y2="16"/>
+  </svg>
+);
 
 interface Message {
   id: string;
@@ -150,7 +162,7 @@ export default function AiAssistantPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Suggested prompts (only show initially) */}
+      {/* Suggested prompts */}
       {messages.length === 1 && (
         <div className="px-4 pb-3">
           <p className="text-xs text-gray-400 mb-2 px-1">Suggested</p>
