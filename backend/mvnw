@@ -1,11 +1,29 @@
 #!/bin/sh
+# ----------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF)
+# Maven Wrapper startup script for POSIX systems
+# ----------------------------------------------------------------------------
 set -e
+
 MAVEN_WRAPPER_JAR=".mvn/wrapper/maven-wrapper.jar"
 MAVEN_WRAPPER_PROPERTIES=".mvn/wrapper/maven-wrapper.properties"
+MAVEN_PROJECTBASEDIR=$(pwd)
+
+wrapperJarUrl=$(grep "wrapperUrl" "$MAVEN_WRAPPER_PROPERTIES" | cut -d'=' -f2-)
+
 if [ ! -f "$MAVEN_WRAPPER_JAR" ]; then
-  WRAPPER_URL=$(grep wrapperUrl "$MAVEN_WRAPPER_PROPERTIES" | cut -d'=' -f2)
-  mkdir -p .mvn/wrapper
-  curl -fsSL -o "$MAVEN_WRAPPER_JAR" "$WRAPPER_URL" || \
-  wget -q -O "$MAVEN_WRAPPER_JAR" "$WRAPPER_URL"
+  echo "Downloading Maven Wrapper..."
+  if command -v wget > /dev/null; then
+    wget -q -O "$MAVEN_WRAPPER_JAR" "$wrapperJarUrl"
+  else
+    # Use Java to download if wget/curl not available
+    java -cp "" \
+      -Dmaven.wrapper.url="$wrapperJarUrl" \
+      org.apache.maven.wrapper.MavenWrapperDownloader "$MAVEN_WRAPPER_JAR" || true
+  fi
 fi
-exec java -jar "$MAVEN_WRAPPER_JAR" "$@"
+
+exec java \
+  -classpath "$MAVEN_WRAPPER_JAR" \
+  "-Dmaven.multiModuleProjectDirectory=$MAVEN_PROJECTBASEDIR" \
+  org.apache.maven.wrapper.MavenWrapperMain "$@"

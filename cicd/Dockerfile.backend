@@ -2,10 +2,15 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
+# Install curl and wget needed by Maven wrapper
+RUN apk add --no-cache curl wget
+
 # Copy Maven wrapper and pom first (layer cache)
 COPY backend/pom.xml .
 COPY backend/.mvn .mvn
 COPY backend/mvnw .
+
+# Download Maven via wrapper
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -q
 
 # Copy source and build

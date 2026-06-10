@@ -39,7 +39,6 @@ export interface Job {
   status: JobStatus;
   requiredSkills?: string;
   proofImageUrl?: string;
-  proofLocation?: string;
   postedAt: string;
   acceptedAt?: string;
   completedAt?: string;
