@@ -33,7 +33,6 @@ export const IconLoader      = svg(<><path d="M21 12a9 9 0 1 1-6.219-8.56"/></>)
 export const IconClock       = svg(<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>);
 export const IconRandSign    = svg(<><path d="M2 8h8l4 8h8"/><path d="M6 4l4 4-4 4"/><path d="M12 12h4a2 2 0 0 1 0 4h-4"/></>);
 
-// Status badge colours
 export const JOB_STATUS_STYLES: Record<string, string> = {
   OPEN:              'bg-emerald-100 text-emerald-700',
   IN_PROGRESS:       'bg-blue-100 text-blue-700',

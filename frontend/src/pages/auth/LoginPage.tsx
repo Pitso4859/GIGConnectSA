@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../services/api';
 import { IconSparkles } from '../../components/icons/Icons';
+import { LogoSA } from '../../components/icons/LogoSA';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -24,20 +25,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      {/* SA flag colour accent bars */}
+      <div className="fixed top-0 left-0 right-0 h-1 flex z-50">
+        <div className="flex-1 bg-[#007A4D]"/>
+        <div className="flex-1 bg-[#FFB612]"/>
+        <div className="flex-1 bg-[#E8261A]"/>
+        <div className="flex-1 bg-[#002395]"/>
+        <div className="flex-1 bg-black"/>
+        <div className="flex-1 bg-white"/>
+      </div>
+
       <div className="w-full max-w-md">
-        {/* Brand */}
+        {/* Brand with SVG logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg mb-4">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-            </svg>
+          <div className="flex justify-center mb-4">
+            <LogoSA size={96}/>
           </div>
           <h1 className="text-3xl font-bold text-white">GIGConnect SA</h1>
           <p className="text-slate-400 mt-1">Sign in to your account</p>
         </div>
 
-        <div className="card p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="label">Email address</label>
@@ -49,20 +58,27 @@ export default function LoginPage() {
               <input type="password" className="input" placeholder="••••••••" required
                 value={form.password} onChange={e => setForm(p => ({...p, password: e.target.value}))}/>
             </div>
-            {error && <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2">{error}</p>}
+            {error && (
+              <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2">
+                {error}
+              </p>
+            )}
             <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
           <p className="text-center text-sm text-slate-500 mt-5">
-            No account? <Link to="/register" className="text-brand-500 font-semibold hover:text-brand-600">Create one free</Link>
+            No account?{' '}
+            <Link to="/register" className="text-brand-500 font-semibold hover:text-brand-600">
+              Create one free
+            </Link>
           </p>
         </div>
 
-        {/* Demo hint */}
-        <div className="mt-4 card p-4 text-center">
-          <p className="text-xs text-slate-500 flex items-center justify-center gap-1">
-            <IconSparkles size={14}/> Powered by Gemini AI — SA's informal worker marketplace
+        <div className="mt-4 bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+          <p className="text-xs text-slate-400 flex items-center justify-center gap-1.5">
+            <IconSparkles size={13} className="text-brand-400"/>
+            Powered by Gemini AI · Empowering SA's informal economy
           </p>
         </div>
       </div>
