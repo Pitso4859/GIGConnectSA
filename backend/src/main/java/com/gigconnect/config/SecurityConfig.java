@@ -24,21 +24,14 @@ import com.gigconnect.security.UserDetailsServiceImpl;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
-
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
-    // Inject AppProperties so we can use the configured allowed origins
-    private final AppProperties appProperties;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -47,24 +40,17 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // CORS preflight — must be first, before any auth checks
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Auth endpoints
                         .requestMatchers("/auth/**").permitAll()
-                        // Public job/leaderboard browsing
                         .requestMatchers(HttpMethod.GET, "/jobs").permitAll()
                         .requestMatchers(HttpMethod.GET, "/jobs/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/leaderboard").permitAll()
-                        // Actuator health check (used by Render)
                         .requestMatchers("/actuator/health").permitAll()
-                        // Swagger UI + OpenAPI spec — must be accessible without auth
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml"
+                                "/v3/api-docs/**"
                         ).permitAll()
-                        // Admin only
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -76,21 +62,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        List<String> origins = appProperties.getCors().getAllowedOrigins();
-        log.info("CORS allowed origins: {}", origins);
-        if (origins == null || origins.isEmpty()) {
-            log.warn("No CORS origins configured — falling back to allow all (*)");
-            config.setAllowedOriginPatterns(List.of("*"));
-        } else {
-            // Use setAllowedOriginPatterns instead of setAllowedOrigins.
-            // When allowCredentials=true, setAllowedOrigins rejects wildcard and
-            // can fail with Cloudflare/Render proxies that modify the Origin header.
-            // setAllowedOriginPatterns supports exact strings AND patterns, and
-            // correctly reflects the request Origin back in the response header.
-            config.setAllowedOriginPatterns(origins);
-        }
-
+        // allowedOriginPatterns("*") with allowCredentials(true) is the correct
+        // Spring Security pattern. Do NOT use setAllowedOrigins("*") — that
+        // conflicts with credentials. Do NOT mix setAllowedOrigins and
+        // setAllowedOriginPatterns — they conflict and one will be ignored.
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));

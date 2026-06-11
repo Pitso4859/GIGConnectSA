@@ -1,8 +1,9 @@
 # ─── Server ───────────────────────────────────────────────────────────────────
 server:
-  # Render injects PORT as a string (e.g. "10000"); SERVER_PORT is our safe alias
-  # set to 8080 in render.yaml. Falls back to 8080 locally.
-  port: ${SERVER_PORT:8080}
+  # Render injects PORT for ALL web service types including Docker.
+  # The app MUST bind to PORT or Render's port scan will time out.
+  # Falls back to 8080 for local development.
+  port: ${PORT:8080}
   servlet:
     context-path: /api/v1
 
@@ -11,12 +12,9 @@ spring:
   application:
     name: gigconnect-api
 
-  # DataSource — managed by DataSourceConfig.java which parses DATABASE_URL.
-  # No spring.datasource.* needed here; DataSourceConfig builds the HikariCP
-  # bean directly from DATABASE_URL (Render) or localhost defaults (local dev).
   jpa:
     hibernate:
-      ddl-auto: validate          # Flyway owns the schema; Hibernate just validates
+      ddl-auto: validate
     show-sql: false
     open-in-view: false
     properties:
@@ -28,14 +26,12 @@ spring:
         order_inserts: true
         order_updates: true
 
-  # Flyway migrations
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-    repair-on-migrate: true   # Fixes checksum mismatch after migration edits
+    repair-on-migrate: true
 
-  # Jackson
   jackson:
     default-property-inclusion: non_null
     serialization:
@@ -57,13 +53,19 @@ management:
 app:
   jwt:
     secret: ${JWT_SECRET:change-me-in-production-must-be-256-bits-or-longer-for-hmac}
-    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}       # 15 min
-    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days
+    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
+    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
 
   cors:
-    # APP_CORS_ALLOWED_ORIGINS maps correctly to app.cors.allowed-origins via
-    # Spring Boot relaxed binding. CORS_ORIGINS kept as fallback.
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}}
+    # Spring Boot cannot bind a comma-separated env var string to List<String>.
+    # SecurityConfig falls back to allowedOriginPatterns("*") when this list is
+    # empty, which correctly allows all origins. Set as a YAML list here for
+    # local dev; override in production via SecurityConfig wildcard fallback.
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:3000
+      - https://gigconnectsa.onrender.com
+      - https://gigconnect-web.onrender.com
 
   gemini:
     api-key: ${GEMINI_API_KEY:}
@@ -87,9 +89,7 @@ springdoc:
     try-it-out-enabled: true
     operations-sorter: method
     tags-sorter: alpha
-    display-request-duration: true
   api-docs:
     path: /v3/api-docs
-  # Show all endpoints including those under /auth (marked permitAll)
   show-actuator: false
   packages-to-scan: com.gigconnect.controller
