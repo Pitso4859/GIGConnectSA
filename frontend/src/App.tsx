@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import AppLayout from './components/layout/AppLayout';
@@ -30,29 +29,29 @@ function ClientRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public */}
-        <Route path="/login"    element={<LoginPage/>}/>
-        <Route path="/register" element={<RegisterPage/>}/>
+      <BrowserRouter>
+        <Routes>
+          {/* Public */}
+          <Route path="/login"    element={<LoginPage/>}/>
+          <Route path="/register" element={<RegisterPage/>}/>
 
-        {/* Protected */}
-        <Route path="/" element={<PrivateRoute><AppLayout/></PrivateRoute>}>
-          <Route index element={<Navigate to="/dashboard" replace/>}/>
-          <Route path="dashboard"   element={<DashboardPage/>}/>
-          <Route path="jobs"        element={<JobsPage/>}/>
-          <Route path="jobs/my"     element={<MyJobsPage/>}/>
-          <Route path="jobs/:id"    element={<JobDetailPage/>}/>
-          <Route path="post-job"    element={<ClientRoute><PostJobPage/></ClientRoute>}/>
-          <Route path="wallet"      element={<WalletPage/>}/>
-          <Route path="leaderboard" element={<LeaderboardPage/>}/>
-          <Route path="ai"          element={<AiChatPage/>}/>
-          <Route path="profile"     element={<ProfilePage/>}/>
-        </Route>
+          {/* Protected */}
+          <Route path="/" element={<PrivateRoute><AppLayout/></PrivateRoute>}>
+            <Route index element={<Navigate to="/dashboard" replace/>}/>
+            <Route path="dashboard"   element={<DashboardPage/>}/>
+            <Route path="jobs"        element={<JobsPage/>}/>
+            <Route path="jobs/my"     element={<MyJobsPage/>}/>
+            <Route path="jobs/:id"    element={<JobDetailPage/>}/>
+            <Route path="post-job"    element={<ClientRoute><PostJobPage/></ClientRoute>}/>
+            <Route path="wallet"      element={<WalletPage/>}/>
+            <Route path="leaderboard" element={<LeaderboardPage/>}/>
+            <Route path="ai"          element={<AiChatPage/>}/>
+            <Route path="profile"     element={<ProfilePage/>}/>
+          </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
-      </Routes>
-    </BrowserRouter>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
+        </Routes>
+      </BrowserRouter>
   );
 }

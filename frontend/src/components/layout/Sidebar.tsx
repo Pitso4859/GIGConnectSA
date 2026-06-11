@@ -65,10 +65,8 @@ export default function Sidebar() {
           {/* Logo */}
           <div className="px-6 py-5 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                </svg>
+              <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden flex items-center justify-center">
+                <img src="/logo.svg" alt="GIGConnect SA" className="w-full h-full object-contain p-0.5" />
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-900">GIGConnect</p>
