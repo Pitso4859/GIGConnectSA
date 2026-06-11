@@ -42,11 +42,22 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Auth endpoints
                         .requestMatchers("/auth/**").permitAll()
+                        // Public job/leaderboard browsing
                         .requestMatchers(HttpMethod.GET, "/jobs").permitAll()
                         .requestMatchers(HttpMethod.GET, "/jobs/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/leaderboard").permitAll()
+                        // Actuator health check (used by Render)
                         .requestMatchers("/actuator/health").permitAll()
+                        // Swagger UI + OpenAPI spec — must be accessible without auth
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml"
+                        ).permitAll()
+                        // Admin only
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

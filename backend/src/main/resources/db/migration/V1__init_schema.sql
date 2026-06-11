@@ -1,11 +1,14 @@
+-- GIGConnect SA uses gen_random_uuid() (PostgreSQL 13+ built-in, no superuser needed)
+-- Render free tier does not permit CREATE EXTENSION, so uuid-ossp is intentionally omitted.
+
 -- GIGConnect SA - Initial Schema
 -- V1__init_schema.sql
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 
 -- ─── USERS ────────────────────────────────────────────────────────────────────
 CREATE TABLE users (
-                       id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                       id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                        email         VARCHAR(255) NOT NULL UNIQUE,
                        password_hash VARCHAR(255) NOT NULL,
                        full_name     VARCHAR(255) NOT NULL,
@@ -23,7 +26,7 @@ CREATE TABLE users (
 
 -- ─── REFRESH TOKENS ───────────────────────────────────────────────────────────
 CREATE TABLE refresh_tokens (
-                                id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                                id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                 user_id     UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                                 token       VARCHAR(500) NOT NULL UNIQUE,
                                 expires_at  TIMESTAMPTZ  NOT NULL,
@@ -33,7 +36,7 @@ CREATE TABLE refresh_tokens (
 
 -- ─── SKILLS ───────────────────────────────────────────────────────────────────
 CREATE TABLE skills (
-                        id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                        id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         name       VARCHAR(100) NOT NULL UNIQUE,
                         category   VARCHAR(100) NOT NULL,
                         created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
@@ -48,7 +51,7 @@ CREATE TABLE user_skills (
 
 -- ─── JOBS ─────────────────────────────────────────────────────────────────────
 CREATE TABLE jobs (
-                      id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                      id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                       client_id    UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                       worker_id    UUID         REFERENCES users(id) ON DELETE SET NULL,
                       title        VARCHAR(255) NOT NULL,
@@ -71,7 +74,7 @@ CREATE TABLE jobs (
 
 -- ─── RATINGS ──────────────────────────────────────────────────────────────────
 CREATE TABLE ratings (
-                         id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                          job_id     UUID         NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
                          rater_id   UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                          ratee_id   UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -83,14 +86,14 @@ CREATE TABLE ratings (
 
 -- ─── WALLET ───────────────────────────────────────────────────────────────────
 CREATE TABLE wallets (
-                         id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                          user_id    UUID         NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
                          balance    DECIMAL(10,2) NOT NULL DEFAULT 100.00 CHECK (balance >= 0),
                          updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE transactions (
-                              id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                              id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                               wallet_id       UUID         NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
                               job_id          UUID         REFERENCES jobs(id) ON DELETE SET NULL,
                               type            VARCHAR(20)  NOT NULL CHECK (type IN ('CREDIT','DEBIT','ESCROW','RELEASE','REFUND')),
@@ -102,7 +105,7 @@ CREATE TABLE transactions (
 
 -- ─── AI CHAT HISTORY ──────────────────────────────────────────────────────────
 CREATE TABLE ai_chats (
-                          id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                          id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                           user_id    UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                           role       VARCHAR(20)  NOT NULL CHECK (role IN ('USER','ASSISTANT')),
                           content    TEXT         NOT NULL,
