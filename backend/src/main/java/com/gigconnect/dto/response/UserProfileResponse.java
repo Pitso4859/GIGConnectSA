@@ -1,6 +1,6 @@
 package com.gigconnect.dto.response;
 
-import com.gigconnect.entity.UserRole;
+import com.gigconnect.entity.User;
 import lombok.Builder;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -8,13 +8,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-@Data @Builder
+@Data
+@Builder
 public class UserProfileResponse {
     private UUID id;
     private String email;
     private String fullName;
     private String phone;
-    private UserRole role;
+    private User.Role role;
     private String avatarUrl;
     private String bio;
     private String location;
@@ -26,7 +27,11 @@ public class UserProfileResponse {
     private List<SkillDto> skills;
     private Instant createdAt;
 
-    @Data @Builder public static class SkillDto {
-        private UUID id; private String skillName; private int experienceYears;
+    @Data
+    @Builder
+    public static class SkillDto {
+        private UUID id;
+        private String skillName;
+        private int experienceYears;
     }
 }
