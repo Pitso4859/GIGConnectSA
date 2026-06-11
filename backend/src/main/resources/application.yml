@@ -1,0 +1,81 @@
+# ─── Server ───────────────────────────────────────────────────────────────────
+server:
+  # Render injects PORT as a string (e.g. "10000"); SERVER_PORT is our safe alias
+  # set to 8080 in render.yaml. Falls back to 8080 locally.
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api/v1
+
+# ─── Spring ───────────────────────────────────────────────────────────────────
+spring:
+  application:
+    name: gigconnect-api
+
+  # DataSource — managed by DataSourceConfig.java which parses DATABASE_URL.
+  # No spring.datasource.* needed here; DataSourceConfig builds the HikariCP
+  # bean directly from DATABASE_URL (Render) or localhost defaults (local dev).
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway owns the schema; Hibernate just validates
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Flyway migrations
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Jackson
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Africa/Johannesburg
+
+# ─── Management / Actuator ────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ─── App-specific properties (bound via AppProperties.java) ───────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-in-production-must-be-256-bits-or-longer-for-hmac}
+    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}       # 15 min
+    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days
+
+  cors:
+    # Comma-separated list of allowed origins. Spring Boot binds this to
+    # List<String> in AppProperties automatically.
+    # Override via CORS_ORIGINS env var on Render.
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_MODEL:gemini-1.5-flash}
+    base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/models}
+
+# ─── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    com.gigconnect: DEBUG
+    org.springframework.security: WARN
+    org.flywaydb: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
