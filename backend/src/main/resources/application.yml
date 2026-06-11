@@ -43,9 +43,10 @@ app:
     access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
   cors:
+    # CORS is handled by allowedOriginPatterns("*") in SecurityConfig.
+    # This list is kept for reference only and is not read at runtime.
     allowed-origins:
       - http://localhost:5173
-      - http://localhost:3000
       - https://gigconnectsa.onrender.com
       - https://gigconnect-web.onrender.com
   gemini:
