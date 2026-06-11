@@ -23,11 +23,14 @@ services:
       - key: JWT_REFRESH_TOKEN_EXPIRATION
         value: "604800000"
       - key: GEMINI_API_KEY
-        sync: false   # set manually in Render dashboard
+        sync: false
+      # Must match the actual frontend URL shown in the browser.
+      # gigconnectsa.onrender.com is the live URL; gigconnect-web.onrender.com
+      # is included as fallback in case the service was redeployed under that name.
       - key: CORS_ORIGINS
-        value: https://gigconnect-web.onrender.com
-      # Do NOT set PORT — Render reserves it and injects a non-numeric string
-      # for Docker services, causing NumberFormatException at startup.
+        value: https://gigconnectsa.onrender.com,https://gigconnect-web.onrender.com
+      - key: SERVER_PORT
+        value: "8080"
 
   # ─── Frontend ───────────────────────────────────────────────────────────────
   - type: web
@@ -37,7 +40,9 @@ services:
     dockerContext: .
     region: oregon
     plan: free
-    envVars:
+    # VITE_API_URL must be a Docker build arg — Vite bakes it into the JS
+    # bundle at build time, not at runtime.
+    dockerBuildArgs:
       - key: VITE_API_URL
         value: https://gigconnect-api.onrender.com/api/v1
 

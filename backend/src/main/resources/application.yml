@@ -35,7 +35,9 @@ app:
     access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,https://gigconnect-web.onrender.com}
+    # Include both possible frontend URLs — the Render service name and any custom domain.
+    # Override at deploy time via the CORS_ORIGINS env var.
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,https://gigconnectsa.onrender.com,https://gigconnect-web.onrender.com}
   gemini:
     api-key: ${GEMINI_API_KEY}
     model: gemini-1.5-flash
