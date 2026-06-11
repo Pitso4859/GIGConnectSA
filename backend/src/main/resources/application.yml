@@ -20,7 +20,11 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: ${PORT:8080}
+  # Use SERVER_PORT (not PORT) to avoid conflict with Render's reserved PORT variable.
+  # Render injects PORT as its internal routing port (a plain string) for native runtimes,
+  # which causes NumberFormatException when Spring tries to parse it as an Integer.
+  # Spring Boot also honours SERVER_PORT natively via relaxed binding.
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api/v1
 

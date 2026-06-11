@@ -30,7 +30,10 @@ services:
         sync: false   # set manually in Render dashboard
       - key: CORS_ORIGINS
         value: https://gigconnect-web.onrender.com
-      - key: PORT
+      # Do NOT set PORT here — Render reserves that variable name and injects
+      # a non-numeric string for Docker services, causing NumberFormatException.
+      # The app defaults to 8080 via SERVER_PORT fallback in application.yml.
+      - key: SERVER_PORT
         value: "8080"
 
   # ─── Frontend ───────────────────────────────────────────────────────────────

@@ -2,15 +2,10 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
-# Install curl and wget needed by Maven wrapper
-RUN apk add --no-cache curl wget
-
 # Copy Maven wrapper and pom first (layer cache)
 COPY backend/pom.xml .
 COPY backend/.mvn .mvn
 COPY backend/mvnw .
-
-# Download Maven via wrapper
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -q
 
 # Copy source and build
@@ -28,6 +23,9 @@ USER gigconnect
 # Copy fat jar
 COPY --from=builder /app/target/*.jar app.jar
 
+# Default port — overridden at runtime via SERVER_PORT env var.
+# NOTE: do NOT use PORT as that env var name is reserved by Render and
+#       injected as a non-numeric string, causing Spring Boot startup failure.
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
