@@ -12,26 +12,12 @@ services:
     plan: free
     healthCheckPath: /api/v1/actuator/health
     envVars:
-      # Render's connectionString uses postgresql:// (not jdbc:postgresql://).
-      # JDBC requires the jdbc: prefix — so we build JDBC_DATABASE_URL here
-      # by prepending it. application.yml reads JDBC_DATABASE_URL, not DATABASE_URL.
-      - key: JDBC_DATABASE_URL
-        value: "jdbc:"
-        # NOTE: Render does not support string concatenation in render.yaml.
-        # After deploying, go to the Render dashboard → gigconnect-api → Environment
-        # and set JDBC_DATABASE_URL manually to:
-        #   jdbc:<value of the Internal Database URL shown on gigconnect-db>
-        # Example: jdbc:postgresql://dpg-xxx-a/gigconnect_db?user=gigconnect_db_user&password=xxx
-        # OR use the simpler approach below — set it from the database connectionString
-        # and add the jdbc: prefix in the dashboard.
-      - key: DATABASE_USERNAME
+      # Render's connectionString uses the postgresql:// scheme.
+      # DataSourceConfig.java normalises it to jdbc:postgresql:// at startup.
+      - key: DATABASE_URL
         fromDatabase:
           name: gigconnect-db
-          property: user
-      - key: DATABASE_PASSWORD
-        fromDatabase:
-          name: gigconnect-db
-          property: password
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: GEMINI_API_KEY
