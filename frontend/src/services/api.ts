@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_URL || '/api/v1';
+// NOTE: Vite bakes import.meta.env.* at build time from Docker ARG VITE_API_URL.
+// If the build arg wasn't passed (Render runtime envVars don't count),
+// fall back to the absolute production URL so the app always works.
+const BASE = import.meta.env.VITE_API_URL || 'https://gigconnect-api.onrender.com/api/v1';
 export const api = axios.create({ baseURL: BASE, timeout: 15000 });
 
 api.interceptors.request.use(c => {
