@@ -1,10 +1,5 @@
 package com.gigconnect.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import jakarta.validation.constraints.*;
 
-@Data
-public class AiChatRequest {
-    @NotBlank
-    private String message;
-}
+public record AiChatRequest(@NotBlank @Size(max = 2000) String message) {}

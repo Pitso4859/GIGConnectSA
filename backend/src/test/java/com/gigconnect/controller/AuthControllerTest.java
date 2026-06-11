@@ -27,15 +27,18 @@ class AuthControllerTest {
 
     @Test
     void register_and_login_success() throws Exception {
-        var reg = new RegisterRequest();
-        reg.setFullName("Test User");
-        reg.setEmail("test@gigconnect.co.za");
-        reg.setPassword("password123");
-        reg.setRole(User.Role.WORKER);
+        var reg = new RegisterRequest(
+                "Test User",
+                "test@gigconnect.co.za",
+                "password123",
+                User.Role.WORKER,
+                null,
+                null
+        );
 
         mvc.perform(post("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(reg)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(reg)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
@@ -43,13 +46,14 @@ class AuthControllerTest {
 
     @Test
     void login_wrong_credentials_returns_401() throws Exception {
-        var login = new LoginRequest();
-        login.setEmail("nobody@example.com");
-        login.setPassword("wrongpassword");
+        var login = new LoginRequest(
+                "nobody@example.com",
+                "wrongpassword"
+        );
 
         mvc.perform(post("/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(login)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(login)))
                 .andExpect(status().isUnauthorized());
     }
 }
