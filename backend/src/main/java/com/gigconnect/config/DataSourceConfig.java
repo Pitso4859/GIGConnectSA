@@ -10,90 +10,112 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
- * Explicit DataSource configuration to handle Render's database URL format.
+ * Explicit DataSource configuration that handles Render's PostgreSQL URL format.
  *
- * <p>Render injects DATABASE_URL using the bare postgresql:// URI scheme, e.g.:
- * <pre>postgresql://user:pass@host/db</pre>
+ * <p>Render injects DATABASE_URL in standard URI form:
+ * <pre>postgresql://user:pass@host/database</pre>
  *
- * <p>JDBC (HikariCP, Flyway, Spring Data JPA) requires the jdbc: prefix:
- * <pre>jdbc:postgresql://user:pass@host/db</pre>
- *
- * <p>This config normalises the URL at startup so neither the developer
- * nor the deployment pipeline needs to manually transform it. It handles
- * three cases:
+ * <p>The PostgreSQL JDBC driver does NOT accept credentials in the URL authority
+ * (user:pass@host). It requires one of:
  * <ul>
- *   <li>Already correct: {@code jdbc:postgresql://...} — used as-is</li>
- *   <li>Render format:   {@code postgresql://...}      — jdbc: prepended</li>
- *   <li>Not set:         falls back to local default</li>
+ *   <li>Separate username/password via HikariConfig.setUsername/setPassword</li>
+ *   <li>Query parameters: jdbc:postgresql://host/db?user=...&amp;password=...</li>
  * </ul>
  *
- * <p>application.yml datasource.url is intentionally left blank so that
- * Spring Boot's auto-configuration defers to this bean instead.
+ * <p>This config parses Render's URL, extracts the credentials, builds a clean
+ * jdbc:postgresql://host:port/database URL, and passes credentials separately —
+ * which is the form HikariCP and the pg driver both accept.
  */
 @Configuration
 public class DataSourceConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DataSourceConfig.class);
 
-    private static final String LOCAL_DEFAULT = "jdbc:postgresql://localhost:5432/gigconnect";
-
     @Value("${DATABASE_URL:}")
     private String databaseUrl;
 
+    // Fallback credentials for local development (ignored when DATABASE_URL has credentials)
     @Value("${DATABASE_USERNAME:postgres}")
-    private String username;
+    private String fallbackUsername;
 
     @Value("${DATABASE_PASSWORD:postgres}")
-    private String password;
+    private String fallbackPassword;
 
     @Bean
     @Primary
     public DataSource dataSource() {
-        String jdbcUrl = toJdbcUrl(databaseUrl);
-        log.info("DataSource URL (scheme only): {}", jdbcUrl.replaceAll("//.*@", "//<credentials>@"));
+        ParsedUrl parsed = parseUrl(databaseUrl);
+        log.info("Connecting to database: jdbc:postgresql://{}:{}/{}",
+                parsed.host, parsed.port, parsed.database);
 
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(jdbcUrl);
+        // Clean JDBC URL — host, port, database only. No credentials in the URL.
+        config.setJdbcUrl(
+                String.format("jdbc:postgresql://%s:%d/%s", parsed.host, parsed.port, parsed.database)
+        );
+        config.setUsername(parsed.username);
+        config.setPassword(parsed.password);
         config.setDriverClassName("org.postgresql.Driver");
-        config.setMaximumPoolSize(5);         // Render free tier: 25 total connections
+        config.setMaximumPoolSize(5);       // Render free tier: 25 total connections shared
         config.setConnectionTimeout(30_000);
         config.setIdleTimeout(600_000);
         config.setMaxLifetime(1_800_000);
-
-        // When DATABASE_URL contains credentials (Render format), do not set
-        // username/password separately — the driver reads them from the URL.
-        if (!databaseUrl.isEmpty() && databaseUrl.contains("@")) {
-            log.info("Using credentials embedded in DATABASE_URL");
-        } else {
-            config.setUsername(username);
-            config.setPassword(password);
-        }
 
         return new HikariDataSource(config);
     }
 
     /**
-     * Normalises any PostgreSQL URL variant to the jdbc:postgresql:// form.
+     * Parses any PostgreSQL URL variant into its components.
      *
-     * <p>Render uses {@code postgresql://user:pass@host/db}.
-     * JDBC requires {@code jdbc:postgresql://user:pass@host/db}.
+     * <p>Handles:
+     * <ul>
+     *   <li>{@code postgresql://user:pass@host:port/db}  — Render format</li>
+     *   <li>{@code postgresql://user:pass@host/db}       — Render (no explicit port)</li>
+     *   <li>{@code jdbc:postgresql://host:port/db}       — standard JDBC (local dev)</li>
+     *   <li>Empty / not set                              — local defaults</li>
+     * </ul>
      */
-    static String toJdbcUrl(String raw) {
+    ParsedUrl parseUrl(String raw) {
+        // Not set — local development defaults
         if (raw == null || raw.isBlank()) {
-            return LOCAL_DEFAULT;
+            return new ParsedUrl("localhost", 5432, "gigconnect",
+                    fallbackUsername, fallbackPassword);
         }
 
-        if (raw.startsWith("jdbc:")) {
-            return raw;
+        // Strip jdbc: prefix so java.net.URI can parse it as a standard URI
+        String uriString = raw.startsWith("jdbc:") ? raw.substring(5) : raw;
+
+        try {
+            URI uri = new URI(uriString);
+            String host = uri.getHost() != null ? uri.getHost() : "localhost";
+            int port = uri.getPort() > 0 ? uri.getPort() : 5432;
+            // Path is "/database" — strip the leading slash
+            String database = uri.getPath() != null
+                    ? uri.getPath().replaceFirst("^/+", "")
+                    : "gigconnect";
+
+            // Extract user:pass from the URI user-info component
+            String username = fallbackUsername;
+            String password = fallbackPassword;
+            String userInfo = uri.getUserInfo();
+            if (userInfo != null && !userInfo.isBlank()) {
+                String[] parts = userInfo.split(":", 2);
+                username = parts[0];
+                password = parts.length > 1 ? parts[1] : fallbackPassword;
+            }
+
+            return new ParsedUrl(host, port, database, username, password);
+
+        } catch (URISyntaxException e) {
+            log.error("Could not parse DATABASE_URL — falling back to localhost. Error: {}", e.getMessage());
+            return new ParsedUrl("localhost", 5432, "gigconnect",
+                    fallbackUsername, fallbackPassword);
         }
-        // Bare postgresql:// — just prepend jdbc:
-        if (raw.startsWith("postgresql://")) {
-            return "jdbc:" + raw;
-        }
-        // Unknown format — return as-is and let the driver report the error clearly
-        log.warn("DATABASE_URL has an unrecognised scheme, passing through: {}", raw.split("@")[0]);
-        return raw;
     }
+
+    record ParsedUrl(String host, int port, String database, String username, String password) {}
 }

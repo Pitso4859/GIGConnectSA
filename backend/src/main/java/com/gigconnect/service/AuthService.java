@@ -13,7 +13,6 @@ import com.gigconnect.exception.ResourceNotFoundException;
 import com.gigconnect.repository.RefreshTokenRepository;
 import com.gigconnect.repository.UserRepository;
 import com.gigconnect.repository.WalletRepository;
-import com.gigconnect.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
