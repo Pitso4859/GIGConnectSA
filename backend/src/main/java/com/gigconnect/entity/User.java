@@ -24,6 +24,7 @@ public class User {
 
     private String phone;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.WORKER;
@@ -37,9 +38,11 @@ public class User {
     @Column(name = "id_number")
     private String idNumber;
 
+    @Builder.Default
     @Column(name = "is_verified")
     private boolean isVerified = false;
 
+    @Builder.Default
     @Column(name = "is_active")
     private boolean isActive = true;
 
