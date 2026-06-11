@@ -12,10 +12,18 @@ services:
     plan: free
     healthCheckPath: /api/v1/actuator/health
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: gigconnect-db
-          property: connectionString
+      # Render's connectionString uses postgresql:// (not jdbc:postgresql://).
+      # JDBC requires the jdbc: prefix — so we build JDBC_DATABASE_URL here
+      # by prepending it. application.yml reads JDBC_DATABASE_URL, not DATABASE_URL.
+      - key: JDBC_DATABASE_URL
+        value: "jdbc:"
+        # NOTE: Render does not support string concatenation in render.yaml.
+        # After deploying, go to the Render dashboard → gigconnect-api → Environment
+        # and set JDBC_DATABASE_URL manually to:
+        #   jdbc:<value of the Internal Database URL shown on gigconnect-db>
+        # Example: jdbc:postgresql://dpg-xxx-a/gigconnect_db?user=gigconnect_db_user&password=xxx
+        # OR use the simpler approach below — set it from the database connectionString
+        # and add the jdbc: prefix in the dashboard.
       - key: DATABASE_USERNAME
         fromDatabase:
           name: gigconnect-db
@@ -30,9 +38,8 @@ services:
         sync: false   # set manually in Render dashboard
       - key: CORS_ORIGINS
         value: https://gigconnect-web.onrender.com
-      # Do NOT set PORT here — Render reserves that variable name and injects
-      # a non-numeric string for Docker services, causing NumberFormatException.
-      # The app defaults to 8080 via SERVER_PORT fallback in application.yml.
+      # Do NOT set PORT — Render reserves it and injects a non-numeric string
+      # for Docker services, causing NumberFormatException at startup.
       - key: SERVER_PORT
         value: "8080"
 
