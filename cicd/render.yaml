@@ -20,9 +20,8 @@ services:
         value: "604800000"
       - key: GEMINI_API_KEY
         sync: false
-      # PORT is injected automatically by Render — do NOT set it here.
-      # application.yml reads ${PORT:8080} so the app binds to whatever
-      # port Render assigns. Setting PORT or SERVER_PORT here will break it.
+      # PORT is injected automatically by Render — do not set it.
+      # application.yml reads ${PORT:8080}.
 
   - type: web
     name: gigconnect-web
@@ -31,9 +30,8 @@ services:
     dockerContext: .
     region: oregon
     plan: free
-    dockerBuildArgs:
-      - key: VITE_API_URL
-        value: https://gigconnect-api.onrender.com/api/v1
+    # No dockerBuildArgs needed — api.ts uses /api/v1 (relative, same-origin).
+    # nginx proxies /api/ to the backend, so no CORS headers are ever needed.
 
 databases:
   - name: gigconnect-db
