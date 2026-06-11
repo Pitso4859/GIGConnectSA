@@ -2,13 +2,16 @@ spring:
   application:
     name: gigconnect-api
   datasource:
-    url: jdbc:postgresql://dpg-d8kk51beo5us73eik0og-a:5432/gigconnect_db?ssl=true&sslmode=require
+    # Render's DATABASE_URL uses the postgresql:// scheme (not jdbc:postgresql://).
+    # We read JDBC_DATABASE_URL instead, which render.yaml constructs with the
+    # correct jdbc: prefix. Falls back to local defaults for development.
+    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/gigconnect}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 30000
-      maximum-pool-size: 5
+      maximum-pool-size: 5        # stay within Render free-tier connection limit
   jpa:
     hibernate:
       ddl-auto: validate
@@ -21,25 +24,27 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+    # Flyway also needs the jdbc: URL, not the bare postgresql:// one
+    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/gigconnect}
     user: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
 
 server:
-  # Don't use PORT - Render sets it automatically
-  # Just use a fixed port for Docker
-  port: 8080
+  # Use SERVER_PORT (not PORT) — Render reserves PORT and injects a non-numeric
+  # string for Docker services, causing NumberFormatException at startup.
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api/v1
 
 app:
   jwt:
-    secret: ${JWT_SECRET}
-    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
-    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
+    secret: ${JWT_SECRET:gigconnect-super-secret-key-must-be-256-bits-long-for-hs256-algorithm}
+    access-token-expiration: 900000      # 15 minutes
+    refresh-token-expiration: 604800000  # 7 days
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,https://gigconnect-web.onrender.com}
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,https://gigconnect-sa.onrender.com}
   gemini:
-    api-key: ${GEMINI_API_KEY}
+    api-key: ${GEMINI_API_KEY:your-gemini-api-key}
     model: gemini-1.5-flash
     base-url: https://generativelanguage.googleapis.com/v1beta/models
 
