@@ -2,7 +2,6 @@ spring:
   application:
     name: gigconnect-api
   datasource:
-    # Construct JDBC URL from individual components to avoid parsing issues
     url: jdbc:postgresql://dpg-d8kk51beo5us73eik0og-a:5432/gigconnect_db?ssl=true&sslmode=require
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
@@ -22,25 +21,23 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
-    # Don't specify URL - let Flyway use the datasource connection
-    # Just provide credentials separately
     user: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
 
 server:
-  port: ${PORT:8080}
+  # Don't use PORT - Render sets it automatically
+  # Just use a fixed port for Docker
+  port: 8080
   servlet:
     context-path: /api/v1
 
 app:
   jwt:
-    secret: ${JWT_SECRET:gigconnect-super-secret-key-must-be-256-bits-long-for-hs256-algorithm}
-    access-token-expiration: 900000
-    refresh-token-expiration: 604800000
+    secret: ${JWT_SECRET}
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:5173,https://gigconnect-web.onrender.com}
   gemini:
-    api-key: ${GEMINI_API_KEY:your-gemini-api-key}
+    api-key: ${GEMINI_API_KEY}
     model: gemini-1.5-flash
     base-url: https://generativelanguage.googleapis.com/v1beta/models
 
