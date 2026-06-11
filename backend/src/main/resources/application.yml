@@ -2,10 +2,8 @@ spring:
   application:
     name: gigconnect-api
   datasource:
-    # Render's DATABASE_URL uses the postgresql:// scheme (not jdbc:postgresql://).
-    # We read JDBC_DATABASE_URL instead, which render.yaml constructs with the
-    # correct jdbc: prefix. Falls back to local defaults for development.
-    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/gigconnect}
+    # Use DATABASE_URL directly - Spring Boot accepts postgresql:// format
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/gigconnect}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -24,8 +22,8 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
-    # Flyway also needs the jdbc: URL, not the bare postgresql:// one
-    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/gigconnect}
+    # Flyway also works with postgresql:// format
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/gigconnect}
     user: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
 
