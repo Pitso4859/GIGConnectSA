@@ -1,8 +1,4 @@
-# Render.com Blueprint — gigconnect-sa
-# Docs: https://render.com/docs/blueprint-spec
-
 services:
-  # ─── Backend API ────────────────────────────────────────────────────────────
   - type: web
     name: gigconnect-api
     runtime: docker
@@ -24,11 +20,10 @@ services:
         value: "604800000"
       - key: GEMINI_API_KEY
         sync: false
-      # Do NOT set PORT — Render injects it automatically for all web services.
-      # application.yml reads ${PORT:8080} so the app binds to Render's port.
-      # Do NOT set SERVER_PORT — it's no longer used.
+      # PORT is injected automatically by Render — do NOT set it here.
+      # application.yml reads ${PORT:8080} so the app binds to whatever
+      # port Render assigns. Setting PORT or SERVER_PORT here will break it.
 
-  # ─── Frontend ───────────────────────────────────────────────────────────────
   - type: web
     name: gigconnect-web
     runtime: docker
@@ -36,13 +31,10 @@ services:
     dockerContext: .
     region: oregon
     plan: free
-    # VITE_API_URL must be a Docker build arg — Vite bakes it into the JS
-    # bundle at build time, not at runtime.
     dockerBuildArgs:
       - key: VITE_API_URL
         value: https://gigconnect-api.onrender.com/api/v1
 
-# ─── PostgreSQL Database ──────────────────────────────────────────────────────
 databases:
   - name: gigconnect-db
     databaseName: gigconnect
