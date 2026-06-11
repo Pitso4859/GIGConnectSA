@@ -1,10 +1,8 @@
-import React from 'react'
-
 interface IconProps { className?: string; size?: number }
 const icon = (path: string) => ({ className = 'w-5 h-5', size }: IconProps) => (
-  <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    {path.split('|').map((d, i) => <path key={i} d={d} />)}
-  </svg>
+    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {path.split('|').map((d, i) => <path key={i} d={d} />)}
+    </svg>
 )
 
 export const HomeIcon = icon('M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z|M9 22V12h6v10')
@@ -19,9 +17,9 @@ export const XIcon = icon('M18 6L6 18|M6 6l12 12')
 export const ChevronRightIcon = icon('M9 18l6-6-6-6')
 export const ChevronDownIcon = icon('M6 9l6 6 6-6')
 export const StarIcon = ({ filled = false, className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
+    <svg className={className} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
 )
 export const MapPinIcon = icon('M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z|M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z')
 export const ClockIcon = icon('M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z|M12 6v6l4 2')
