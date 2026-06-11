@@ -4,6 +4,7 @@ import com.gigconnect.dto.request.LoginRequest;
 import com.gigconnect.dto.request.RegisterRequest;
 import com.gigconnect.dto.response.AuthResponse;
 import com.gigconnect.dto.response.UserResponse;
+import com.gigconnect.dto.response.UserSummary;
 import com.gigconnect.entity.RefreshToken;
 import com.gigconnect.entity.User;
 import com.gigconnect.entity.Wallet;
@@ -38,22 +39,21 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.email())) {
             throw new BadRequestException("Email already registered");
         }
 
         User user = User.builder()
-                .fullName(request.getFullName())
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
-                .phone(request.getPhone())
-                .location(request.getLocation())
+                .fullName(request.fullName())
+                .email(request.email())
+                .passwordHash(passwordEncoder.encode(request.password()))
+                .role(request.role())
+                .phone(request.phone())
                 .build();
 
         user = userRepository.save(user);
 
-        // Auto-create wallet with R100 starter balance
+        // Auto-create wallet with starter balance
         Wallet wallet = Wallet.builder().user(user).build();
         walletRepository.save(wallet);
 
@@ -62,10 +62,10 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid credentials");
         }
 
@@ -114,13 +114,11 @@ public class AuthService {
                 .build();
         refreshTokenRepository.save(refreshToken);
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(rawRefreshToken)
-                .user(toUserResponse(user))
-                .build();
+        // AuthResponse is a record — use its canonical constructor directly
+        return new AuthResponse(accessToken, rawRefreshToken, UserSummary.from(user));
     }
 
+    // Kept for backward compat with JobService / UserService which still use UserResponse
     public static UserResponse toUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())

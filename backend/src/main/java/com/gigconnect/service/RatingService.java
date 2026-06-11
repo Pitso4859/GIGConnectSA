@@ -29,8 +29,8 @@ public class RatingService {
 
     @Transactional
     public void submitRating(UUID raterId, RatingRequest request) {
-        Job job = jobRepository.findById(request.getJobId())
-                .orElseThrow(() -> new ResourceNotFoundException("Job", request.getJobId().toString()));
+        Job job = jobRepository.findById(request.jobId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job", request.jobId().toString()));
 
         if (job.getStatus() != Job.Status.COMPLETED) {
             throw new BadRequestException("Can only rate completed jobs");
@@ -55,8 +55,8 @@ public class RatingService {
                 .job(job)
                 .rater(rater)
                 .ratee(ratee)
-                .score(request.getScore())
-                .comment(request.getComment())
+                .score(request.score())
+                .comment(request.comment())
                 .build();
 
         ratingRepository.save(rating);

@@ -48,17 +48,17 @@ public class JobService {
                 .requiredSkills(request.getRequiredSkills())
                 .build();
 
-        return toResponse(jobRepository.save(job));
+        return JobService.toResponse(jobRepository.save(job));
     }
 
     public PageResponse<JobResponse> getJobs(String status, String category,
-                                              String search, int page, int size) {
+                                             String search, int page, int size) {
         Job.Status jobStatus = status != null ? Job.Status.valueOf(status.toUpperCase()) : null;
         Page<Job> jobs = jobRepository.findWithFilters(jobStatus, category, search,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "postedAt")));
 
         return PageResponse.<JobResponse>builder()
-                .content(jobs.getContent().stream().map(this::toResponse).toList())
+                .content(jobs.getContent().stream().map(JobService::toResponse).toList())
                 .page(page).size(size)
                 .totalElements(jobs.getTotalElements())
                 .totalPages(jobs.getTotalPages())
@@ -67,7 +67,7 @@ public class JobService {
     }
 
     public JobResponse getJobById(UUID id) {
-        return toResponse(jobRepository.findById(id)
+        return JobService.toResponse(jobRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Job", id.toString())));
     }
 
@@ -76,7 +76,7 @@ public class JobService {
         List<Job> jobs = user.getRole() == User.Role.CLIENT
                 ? jobRepository.findByClientOrderByPostedAtDesc(user)
                 : jobRepository.findByWorkerOrderByPostedAtDesc(user);
-        return jobs.stream().map(this::toResponse).toList();
+        return jobs.stream().map(JobService::toResponse).toList();
     }
 
     @Transactional
@@ -95,11 +95,12 @@ public class JobService {
         job.setStatus(Job.Status.IN_PROGRESS);
         job.setAcceptedAt(Instant.now());
 
-        return toResponse(jobRepository.save(job));
+        return JobService.toResponse(jobRepository.save(job));
     }
 
     @Transactional
-    public JobResponse submitProof(UUID workerId, UUID jobId, String proofImageUrl, String proofLocation) {
+    public JobResponse submitProof(UUID workerId, UUID jobId,
+                                   String proofImageUrl, String proofLocation) {
         Job job = jobRepository.findByIdAndWorker(jobId, getUser(workerId))
                 .orElseThrow(() -> new ForbiddenException("Job not found or not assigned to you"));
 
@@ -111,7 +112,7 @@ public class JobService {
         job.setProofLocation(proofLocation);
         job.setStatus(Job.Status.AWAITING_APPROVAL);
 
-        return toResponse(jobRepository.save(job));
+        return JobService.toResponse(jobRepository.save(job));
     }
 
     @Transactional
@@ -127,10 +128,9 @@ public class JobService {
         job.setCompletedAt(Instant.now());
         Job saved = jobRepository.save(job);
 
-        // Transfer payment from client to worker
         walletService.transferPayment(clientId, job.getWorker().getId(), job.getBudget(), saved);
 
-        return toResponse(saved);
+        return JobService.toResponse(saved);
     }
 
     @Transactional
@@ -151,7 +151,7 @@ public class JobService {
         }
 
         job.setStatus(Job.Status.CANCELLED);
-        return toResponse(jobRepository.save(job));
+        return JobService.toResponse(jobRepository.save(job));
     }
 
     private User getUser(UUID id) {

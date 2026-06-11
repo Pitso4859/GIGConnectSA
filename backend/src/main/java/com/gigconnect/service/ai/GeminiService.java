@@ -65,19 +65,16 @@ public class GeminiService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
 
-        // Save user message
         AiChat userMsg = AiChat.builder()
                 .user(user)
                 .role(AiChat.MessageRole.USER)
-                .content(request.getMessage())
+                .content(request.message())
                 .build();
         aiChatRepository.save(userMsg);
 
-        // Build conversation history for Gemini
         List<AiChat> history = aiChatRepository.findRecentByUser(user);
-        String aiReply = callGemini(history, request.getMessage(), user);
+        String aiReply = callGemini(history, request.message(), user);
 
-        // Save AI response
         AiChat aiMsg = AiChat.builder()
                 .user(user)
                 .role(AiChat.MessageRole.ASSISTANT)
@@ -114,42 +111,38 @@ public class GeminiService {
 
     private String callGemini(List<AiChat> history, String newMessage, User user) {
         try {
-            // Build contents array
             var contents = new java.util.ArrayList<>();
 
-            // System prompt as first user turn (Gemini pattern)
             contents.add(java.util.Map.of(
-                "role", "user",
-                "parts", List.of(java.util.Map.of("text", SYSTEM_PROMPT +
-                    "\n\nUser context: Name=" + user.getFullName() +
-                    ", Role=" + user.getRole() + ", Location=" + user.getLocation()))
+                    "role", "user",
+                    "parts", List.of(java.util.Map.of("text", SYSTEM_PROMPT +
+                            "\n\nUser context: Name=" + user.getFullName() +
+                            ", Role=" + user.getRole() + ", Location=" + user.getLocation()))
             ));
             contents.add(java.util.Map.of(
-                "role", "model",
-                "parts", List.of(java.util.Map.of("text",
-                    "Understood! I'm GigAssist. How can I help you today?"))
+                    "role", "model",
+                    "parts", List.of(java.util.Map.of("text",
+                            "Understood! I'm GigAssist. How can I help you today?"))
             ));
 
-            // Add history (last 20 messages)
             history.stream().limit(18).forEach(c -> contents.add(java.util.Map.of(
-                "role", c.getRole() == AiChat.MessageRole.USER ? "user" : "model",
-                "parts", List.of(java.util.Map.of("text", c.getContent()))
+                    "role", c.getRole() == AiChat.MessageRole.USER ? "user" : "model",
+                    "parts", List.of(java.util.Map.of("text", c.getContent()))
             )));
 
-            // Current message
             contents.add(java.util.Map.of(
-                "role", "user",
-                "parts", List.of(java.util.Map.of("text", newMessage))
+                    "role", "user",
+                    "parts", List.of(java.util.Map.of("text", newMessage))
             ));
 
             var requestBody = java.util.Map.of(
-                "contents", contents,
-                "generationConfig", java.util.Map.of(
-                    "temperature", 0.7,
-                    "topK", 40,
-                    "topP", 0.95,
-                    "maxOutputTokens", 1024
-                )
+                    "contents", contents,
+                    "generationConfig", java.util.Map.of(
+                            "temperature", 0.7,
+                            "topK", 40,
+                            "topP", 0.95,
+                            "maxOutputTokens", 1024
+                    )
             );
 
             String json = objectMapper.writeValueAsString(requestBody);
@@ -168,8 +161,8 @@ public class GeminiService {
 
                 JsonNode root = objectMapper.readTree(response.body().string());
                 return root.path("candidates").get(0)
-                           .path("content").path("parts").get(0)
-                           .path("text").asText("I couldn't generate a response. Please try again.");
+                        .path("content").path("parts").get(0)
+                        .path("text").asText("I couldn't generate a response. Please try again.");
             }
 
         } catch (IOException e) {
