@@ -83,7 +83,12 @@ public class SecurityConfig {
             log.warn("No CORS origins configured — falling back to allow all (*)");
             config.setAllowedOriginPatterns(List.of("*"));
         } else {
-            config.setAllowedOrigins(origins);
+            // Use setAllowedOriginPatterns instead of setAllowedOrigins.
+            // When allowCredentials=true, setAllowedOrigins rejects wildcard and
+            // can fail with Cloudflare/Render proxies that modify the Origin header.
+            // setAllowedOriginPatterns supports exact strings AND patterns, and
+            // correctly reflects the request Origin back in the response header.
+            config.setAllowedOriginPatterns(origins);
         }
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
