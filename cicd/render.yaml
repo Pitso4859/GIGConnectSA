@@ -24,11 +24,12 @@ services:
         value: "604800000"
       - key: GEMINI_API_KEY
         sync: false
-      # Must match the actual frontend URL shown in the browser.
-      # gigconnectsa.onrender.com is the live URL; gigconnect-web.onrender.com
-      # is included as fallback in case the service was redeployed under that name.
+      # IMPORTANT: This must be the exact URL shown in the browser for the
+      # frontend service. Do NOT leave this blank — an empty string overrides
+      # the application.yml defaults and breaks CORS.
+      # gigconnectsa.onrender.com is the live Render URL for the frontend.
       - key: CORS_ORIGINS
-        value: https://gigconnectsa.onrender.com,https://gigconnect-web.onrender.com
+        value: "https://gigconnectsa.onrender.com,https://gigconnect-web.onrender.com"
       - key: SERVER_PORT
         value: "8080"
 

@@ -20,6 +20,10 @@ public class AppProperties {
     }
 
     @Data public static class Cors {
+        // Spring Boot will bind a YAML list OR a comma-separated string from
+        // the CORS_ORIGINS env var to this List<String> field automatically.
+        // Do NOT set CORS_ORIGINS to an empty string — use the defaults in
+        // application.yml instead, or set it to actual frontend URL(s).
         private List<String> allowedOrigins;
     }
 

@@ -47,6 +47,7 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .role(request.role())
                 .phone(request.phone())
+                .location(request.location())  // FIX: location was accepted in request but never saved
                 .build();
 
         user = userRepository.save(user);

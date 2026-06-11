@@ -6,7 +6,7 @@ COPY frontend/package*.json ./
 RUN npm ci --silent
 
 COPY frontend/ .
-ARG VITE_API_URL=https://gigconnect-api.onrender.com/api/v1
+ARG VITE_API_URL=/api/v1
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 

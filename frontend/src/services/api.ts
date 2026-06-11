@@ -4,7 +4,10 @@ import axios from 'axios';
 // If the build arg wasn't passed (Render runtime envVars don't count),
 // fall back to the absolute production URL so the app always works.
 const BASE = import.meta.env.VITE_API_URL || 'https://gigconnect-api.onrender.com/api/v1';
-export const api = axios.create({ baseURL: BASE, timeout: 15000 });
+
+// Render free-tier services spin down after inactivity — the first request
+// after a cold start can take up to 60 seconds. Increase timeout accordingly.
+export const api = axios.create({ baseURL: BASE, timeout: 60000 });
 
 api.interceptors.request.use(c => {
   const t = localStorage.getItem('accessToken');

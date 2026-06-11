@@ -23,7 +23,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.gigconnect.security.UserDetailsServiceImpl;
 
 import java.util.List;
-import java.util.ArrayList;
 
 @Configuration
 @EnableWebSecurity
@@ -33,6 +32,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
+    // Inject AppProperties so we can use the configured allowed origins
     private final AppProperties appProperties;
 
     @Bean
@@ -59,16 +59,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Use origins from CORS_ORIGINS env var (via app.cors.allowed-origins in application.yml).
-        // Fall back to permissive wildcard pattern if none are configured (local dev).
-        List<String> configuredOrigins = appProperties.getCors().getAllowedOrigins();
-        if (configuredOrigins != null && !configuredOrigins.isEmpty()) {
-            // Use setAllowedOrigins (exact match) when specific origins are provided.
-            // Must NOT mix with setAllowedOriginPatterns — they conflict in Spring Security.
-            config.setAllowedOrigins(configuredOrigins);
-        } else {
-            // Local dev fallback: allow all origins via pattern (required with allowCredentials=true).
+        List<String> origins = appProperties.getCors().getAllowedOrigins();
+        if (origins == null || origins.isEmpty()) {
+            // Fallback: allow all origins (development / misconfigured deploy)
             config.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            // Use the explicit list from config / env var — safer for production
+            config.setAllowedOrigins(origins);
         }
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
