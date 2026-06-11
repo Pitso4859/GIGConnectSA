@@ -23,6 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.gigconnect.security.UserDetailsServiceImpl;
 
 import java.util.List;
+import java.util.ArrayList;
 
 @Configuration
 @EnableWebSecurity
@@ -32,6 +33,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
+    private final AppProperties appProperties;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -56,10 +58,19 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // allowedOriginPatterns("*") with allowCredentials(true) is the correct
-        // Spring Security combination — allows all origins including credentialed requests.
-        // Do NOT mix setAllowedOrigins() with setAllowedOriginPatterns() as they conflict.
-        config.setAllowedOriginPatterns(List.of("*"));
+
+        // Use origins from CORS_ORIGINS env var (via app.cors.allowed-origins in application.yml).
+        // Fall back to permissive wildcard pattern if none are configured (local dev).
+        List<String> configuredOrigins = appProperties.getCors().getAllowedOrigins();
+        if (configuredOrigins != null && !configuredOrigins.isEmpty()) {
+            // Use setAllowedOrigins (exact match) when specific origins are provided.
+            // Must NOT mix with setAllowedOriginPatterns — they conflict in Spring Security.
+            config.setAllowedOrigins(configuredOrigins);
+        } else {
+            // Local dev fallback: allow all origins via pattern (required with allowCredentials=true).
+            config.setAllowedOriginPatterns(List.of("*"));
+        }
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
