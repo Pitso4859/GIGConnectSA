@@ -32,7 +32,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
-    private final AppProperties appProperties;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -57,19 +56,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        // Read allowed origins from app.cors.allowed-origins (CORS_ORIGINS env var).
-        // Always add a wildcard pattern as a safety fallback so CORS never blocks
-        // the app if the env var is misconfigured.
-        List<String> origins = appProperties.getCors().getAllowedOrigins();
-        if (origins == null || origins.isEmpty()) {
-            config.setAllowedOriginPatterns(List.of("*"));
-        } else {
-            // Use the explicit list from config, plus a wildcard pattern fallback
-            config.setAllowedOrigins(origins);
-            config.addAllowedOriginPattern("*");
-        }
-
+        // allowedOriginPatterns("*") with allowCredentials(true) is the correct
+        // Spring Security combination — allows all origins including credentialed requests.
+        // Do NOT mix setAllowedOrigins() with setAllowedOriginPatterns() as they conflict.
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
