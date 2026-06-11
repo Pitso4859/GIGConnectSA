@@ -24,11 +24,16 @@ import com.gigconnect.security.UserDetailsServiceImpl;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
@@ -42,6 +47,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // CORS preflight — must be first, before any auth checks
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Auth endpoints
                         .requestMatchers("/auth/**").permitAll()
                         // Public job/leaderboard browsing
@@ -71,11 +78,11 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         List<String> origins = appProperties.getCors().getAllowedOrigins();
+        log.info("CORS allowed origins: {}", origins);
         if (origins == null || origins.isEmpty()) {
-            // Fallback: allow all origins (development / misconfigured deploy)
+            log.warn("No CORS origins configured — falling back to allow all (*)");
             config.setAllowedOriginPatterns(List.of("*"));
         } else {
-            // Use the explicit list from config / env var — safer for production
             config.setAllowedOrigins(origins);
         }
 

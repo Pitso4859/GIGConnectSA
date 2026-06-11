@@ -61,10 +61,9 @@ app:
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days
 
   cors:
-    # Comma-separated list of allowed origins. Spring Boot binds this to
-    # List<String> in AppProperties automatically.
-    # Override via CORS_ORIGINS env var on Render.
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+    # APP_CORS_ALLOWED_ORIGINS maps correctly to app.cors.allowed-origins via
+    # Spring Boot relaxed binding. CORS_ORIGINS kept as fallback.
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}}
 
   gemini:
     api-key: ${GEMINI_API_KEY:}
