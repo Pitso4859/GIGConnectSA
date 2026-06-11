@@ -1,5 +1,6 @@
 package com.gigconnect.service;
 
+import com.gigconnect.config.AppProperties;
 import com.gigconnect.dto.request.LoginRequest;
 import com.gigconnect.dto.request.RegisterRequest;
 import com.gigconnect.dto.response.AuthResponse;
@@ -13,8 +14,8 @@ import com.gigconnect.exception.ResourceNotFoundException;
 import com.gigconnect.repository.RefreshTokenRepository;
 import com.gigconnect.repository.UserRepository;
 import com.gigconnect.repository.WalletRepository;
+import com.gigconnect.security.JwtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,9 +33,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-
-    @Value("${app.jwt.refresh-token-expiration}")
-    private long refreshTokenExpiration;
+    private final AppProperties appProperties;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -105,15 +104,15 @@ public class AuthService {
         String accessToken = jwtService.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole().name());
 
+        long refreshExpiration = appProperties.getJwt().getRefreshTokenExpiration();
         String rawRefreshToken = UUID.randomUUID().toString();
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(rawRefreshToken)
-                .expiresAt(Instant.now().plusMillis(refreshTokenExpiration))
+                .expiresAt(Instant.now().plusMillis(refreshExpiration))
                 .build();
         refreshTokenRepository.save(refreshToken);
 
-        // AuthResponse is a record — use its canonical constructor directly
         return new AuthResponse(accessToken, rawRefreshToken, UserSummary.from(user));
     }
 
