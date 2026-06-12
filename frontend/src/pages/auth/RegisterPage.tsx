@@ -84,13 +84,13 @@ export default function RegisterPage() {
 
             <div>
               <label className="label">Full name</label>
-              <input type="text" className="input" placeholder="Thabo Nkosi" required
+              <input type="text" className="input" placeholder="Nkotolane Pitso" required
                      value={form.fullName} onChange={f('fullName')} />
             </div>
 
             <div>
               <label className="label">Email</label>
-              <input type="email" className="input" placeholder="thabo@email.co.za" required
+              <input type="email" className="input" placeholder="pitso@email.co.za" required
                      value={form.email} onChange={f('email')} />
             </div>
 
@@ -121,7 +121,7 @@ export default function RegisterPage() {
 
             {waking && loading && (
               <p className="text-sm text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2">
-                ⏳ Server is waking up — this takes up to 60 seconds on free tier. Please wait...
+                ⏳ Server is connecting up — this takes up to 60 seconds on free tier. Please wait...
               </p>
             )}
 

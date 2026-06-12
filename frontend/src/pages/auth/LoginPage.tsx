@@ -53,7 +53,7 @@ export default function LoginPage() {
             <div>
               <label className="label">Email address</label>
               <input
-                type="email" className="input" placeholder="you@example.com" required
+                type="email" className="input" placeholder="your@example.com" required
                 value={form.email}
                 onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
               />
@@ -93,7 +93,7 @@ export default function LoginPage() {
 
         <div className="mt-4 card p-4 text-center">
           <p className="text-xs text-slate-500 flex items-center justify-center gap-1">
-            <IconSparkles size={14} /> Powered by Gemini AI — SA&apos;s informal worker marketplace
+            <IconSparkles size={14} /> Powered by Nkotolane Pitso — SA&apos;s informal worker marketplace
           </p>
         </div>
       </div>
