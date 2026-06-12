@@ -23,13 +23,12 @@ USER gigconnect
 # Copy fat jar
 COPY --from=builder /app/target/*.jar app.jar
 
-# Port 8080 is hardcoded in application.yml.
-# We do NOT use ${PORT} here — Render's PORT env var can be a non-numeric string
-# which causes Spring Boot to fail on startup. The Render platform handles port
-# mapping externally; the container always listens on 8080.
+# Default port — overridden at runtime via SERVER_PORT env var.
+# NOTE: do NOT use PORT as that env var name is reserved by Render and
+#       injected as a non-numeric string, causing Spring Boot startup failure.
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD wget -qO- http://localhost:8080/api/v1/actuator/health || exit 1
 
 ENTRYPOINT ["java", \

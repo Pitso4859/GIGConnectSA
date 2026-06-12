@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-// All API calls use the /api/v1 prefix.
-// In production (Docker/Render): nginx proxies /api/... to the backend service.
-// In dev (npm run dev): vite.config.ts proxy forwards /api/... to localhost:8080.
-// The backend Spring context-path is /api/v1, so full path is preserved end-to-end.
+// Use a relative URL so all API calls go to gigconnectsa.onrender.com/api/v1/*
+// nginx proxies these to gigconnect-api.onrender.com — same origin, no CORS.
+// This works even during Render free-tier cold starts because nginx stays warm.
 const BASE = '/api/v1';
 
 export const api = axios.create({ baseURL: BASE, timeout: 120000 });
@@ -30,33 +29,9 @@ api.interceptors.response.use(r => r, async e => {
   return Promise.reject(e);
 });
 
-export const authApi    = {
-  register: (d: object) => api.post('/auth/register', d),
-  login:    (d: object) => api.post('/auth/login', d),
-  logout:   ()          => api.post('/auth/logout'),
-};
-export const jobsApi    = {
-  getAll:      (p?: object)           => api.get('/jobs', { params: p }),
-  getById:     (id: string)           => api.get(`/jobs/${id}`),
-  getMy:       ()                     => api.get('/jobs/my'),
-  create:      (d: object)            => api.post('/jobs', d),
-  accept:      (id: string)           => api.patch(`/jobs/${id}/accept`),
-  submitProof: (id: string, p: object)=> api.patch(`/jobs/${id}/submit-proof`, null, { params: p }),
-  approve:     (id: string)           => api.patch(`/jobs/${id}/approve`),
-  cancel:      (id: string)           => api.patch(`/jobs/${id}/cancel`),
-};
-export const usersApi   = {
-  getMe:          ()         => api.get('/users/me'),
-  updateMe:       (d: object)=> api.put('/users/me', d),
-  searchWorkers:  (s?: string)=> api.get('/users/workers', { params: { search: s } }),
-};
+export const authApi    = { register: (d: object) => api.post('/auth/register', d), login: (d: object) => api.post('/auth/login', d), logout: () => api.post('/auth/logout') };
+export const jobsApi    = { getAll: (p?: object) => api.get('/jobs', { params: p }), getById: (id: string) => api.get(`/jobs/${id}`), getMy: () => api.get('/jobs/my'), create: (d: object) => api.post('/jobs', d), accept: (id: string) => api.patch(`/jobs/${id}/accept`), submitProof: (id: string, p: object) => api.patch(`/jobs/${id}/submit-proof`, null, { params: p }), approve: (id: string) => api.patch(`/jobs/${id}/approve`), cancel: (id: string) => api.patch(`/jobs/${id}/cancel`) };
+export const usersApi   = { getMe: () => api.get('/users/me'), updateMe: (d: object) => api.put('/users/me', d), searchWorkers: (s?: string) => api.get('/users/workers', { params: { search: s } }) };
 export const walletApi  = { get: () => api.get('/wallet') };
-export const ratingsApi = {
-  submit:         (d: object)=> api.post('/ratings', d),
-  getLeaderboard: ()         => api.get('/leaderboard'),
-};
-export const aiApi      = {
-  chat:        (msg: string) => api.post('/ai/chat', { message: msg }),
-  getHistory:  ()            => api.get('/ai/history'),
-  clearHistory:()            => api.delete('/ai/history'),
-};
+export const ratingsApi = { submit: (d: object) => api.post('/ratings', d), getLeaderboard: () => api.get('/leaderboard') };
+export const aiApi      = { chat: (msg: string) => api.post('/ai/chat', { message: msg }), getHistory: () => api.get('/ai/history'), clearHistory: () => api.delete('/ai/history') };

@@ -1,52 +1,45 @@
-# Render Blueprint — deploys backend + frontend as two Web Services.
-# Docs: https://render.com/docs/blueprint-spec
-#
-# Usage:
-#   1. Push this repo to GitHub
-#   2. Render Dashboard → New → Blueprint → connect your repo
-#   3. Render reads this file automatically
-#   4. Set GEMINI_API_KEY and JWT_SECRET in the backend service's Environment tab
-#   5. Deploy!
+  server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
 
-services:
-  # ── Backend (Spring Boot API) ───────────────────────────────────────────────
-  - type: web
-    name: gigconnect-api
-    runtime: docker
-    dockerfilePath: cicd/Dockerfile.backend
-    # Render free tier: 512 MB RAM, shared CPU
-    plan: free
-    healthCheckPath: /api/v1/actuator/health
-    envVars:
-      # Render PostgreSQL — link to the database below; Render injects DATABASE_URL automatically.
-      - key: DATABASE_URL
-        fromDatabase:
-          name: gigconnect-db
-          property: connectionString
-      - key: JWT_SECRET
-        generateValue: true   # Render auto-generates a secure random value
-      - key: GEMINI_API_KEY
-        sync: false           # Set this manually in the Render dashboard
-      - key: GEMINI_MODEL
-        value: gemini-1.5-flash
-      - key: JWT_ACCESS_TOKEN_EXPIRATION
-        value: "900000"       # 15 minutes
-      - key: JWT_REFRESH_TOKEN_EXPIRATION
-        value: "604800000"    # 7 days
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
 
-  # ── Frontend (React SPA served by Nginx) ───────────────────────────────────
-  - type: web
-    name: gigconnect-web
-    runtime: docker
-    dockerfilePath: cicd/Dockerfile.frontend
-    plan: free
-    envVars:
-      - key: VITE_API_URL
-        value: /api/v1        # Relative — nginx proxies /api/ to backend service
+    # ── API Proxy ──────────────────────────────────────────────────────────────
+    # Browser calls /api/v1/... (same origin)
+    # nginx forwards the FULL path to the backend unchanged.
+    # proxy_ssl_server_name enables SNI for Render's shared TLS cert.
+    location /api/ {
+    proxy_pass            https://gigconnect-api.onrender.com;
+    proxy_http_version    1.1;
+    proxy_ssl_server_name on;
+    proxy_ssl_name        gigconnect-api.onrender.com;
+    proxy_set_header      Host              gigconnect-api.onrender.com;
+    proxy_set_header      X-Real-IP         $remote_addr;
+    proxy_set_header      X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header      X-Forwarded-Proto $scheme;
+    proxy_connect_timeout 60s;
+    proxy_read_timeout    120s;
+    proxy_send_timeout    60s;
+    }
 
-# ── PostgreSQL Database ────────────────────────────────────────────────────────
-databases:
-  - name: gigconnect-db
-    plan: free
-    databaseName: gigconnect
-    user: gigconnect
+    # ── SPA Fallback ───────────────────────────────────────────────────────────
+    location / {
+    try_files $uri $uri/ /index.html;
+    }
+
+    # ── Health ─────────────────────────────────────────────────────────────────
+    location /health {
+    access_log off;
+    return 200 'healthy\n';
+    add_header Content-Type text/plain;
+    }
+
+    # ── Static Asset Cache ─────────────────────────────────────────────────────
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+    }
+  }

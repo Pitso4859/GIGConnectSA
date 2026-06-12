@@ -1,10 +1,5 @@
 server:
-  # Render injects PORT as an env var. Spring Boot reads SERVER_PORT (not PORT) by default.
-  # Using SERVER_PORT avoids the conflict with Render's reserved PORT variable which can
-  # be a non-numeric string on some plan types, causing Spring Boot to fail on startup.
-  # The Dockerfile.backend ENTRYPOINT passes -DSERVER_PORT=${SERVER_PORT:8080} if needed,
-  # but the safest approach is to hard-code 8080 and let Render handle port mapping.
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /api/v1
 
@@ -49,6 +44,7 @@ app:
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
   cors:
     # CORS is handled by allowedOriginPatterns("*") in SecurityConfig.
+    # This list is kept for reference only and is not read at runtime.
     allowed-origins:
       - http://localhost:5173
       - https://gigconnectsa.onrender.com
