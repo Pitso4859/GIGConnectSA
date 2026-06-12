@@ -1,5 +1,8 @@
 server:
-  port: ${PORT:8080}
+  # CRITICAL: Do NOT use ${PORT} here. Render injects PORT as a non-numeric
+  # string for web services which breaks Spring Boot startup.
+  # Render routes external traffic to port 8080 automatically.
+  port: 8080
   servlet:
     context-path: /api/v1
 
@@ -44,7 +47,7 @@ app:
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
   cors:
     # CORS is handled by allowedOriginPatterns("*") in SecurityConfig.
-    # This list is kept for reference only and is not read at runtime.
+    # This list is reference only.
     allowed-origins:
       - http://localhost:5173
       - https://gigconnectsa.onrender.com
