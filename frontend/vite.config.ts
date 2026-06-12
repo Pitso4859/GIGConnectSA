@@ -10,10 +10,12 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // Local dev: proxy /api/v1/* to backend at localhost:8080
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8080',
+        target: 'http://localhost:8080',
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api/, '/api/v1'),
+        // No rewrite needed — backend context-path is /api/v1
+        // and frontend calls /api/v1/... directly
       },
     },
   },

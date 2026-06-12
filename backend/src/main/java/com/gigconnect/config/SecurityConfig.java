@@ -32,7 +32,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
-    // AppProperties removed — CORS handled by wildcard pattern below.
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,18 +40,21 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Always permit OPTIONS pre-flight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Public auth endpoints
                         .requestMatchers("/auth/**").permitAll()
+                        // Public read-only endpoints
                         .requestMatchers(HttpMethod.GET, "/jobs").permitAll()
                         .requestMatchers(HttpMethod.GET, "/jobs/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/leaderboard").permitAll()
+                        // Infrastructure
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**"
-                        ).permitAll()
+                        // API docs
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        // Admin only
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // Everything else requires auth
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
@@ -63,9 +65,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // allowedOriginPatterns("*") with allowCredentials(true) is the only
-        // correct Spring Security combination for open CORS. Do NOT use
-        // setAllowedOrigins("*") — it conflicts with credentials.
+        // allowedOriginPatterns("*") with allowCredentials(true) is the correct
+        // Spring Security combination. Do NOT use setAllowedOrigins("*") — it
+        // throws an exception when combined with allowCredentials(true).
         config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
